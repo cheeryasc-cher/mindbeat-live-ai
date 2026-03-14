@@ -17,7 +17,7 @@
 
 * **Language:** JavaScript (Vanilla), HTML5, CSS3
 * **Backend:** Google Apps Script (GAS)
-* **AI Engine:** Google Gemini 1.5 Flash API
+* **AI Engine:** Google Gemini 2.5 Flash API
 * **Database:** Google Sheets
 * **Platform:** LINE Messaging API & LIFF
 
