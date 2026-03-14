@@ -1,6 +1,6 @@
-const GEMINI_API_KEY = "AIzaSyA1RAH0rg-w1BCb5ySMVA4it8suUFSjwNA"; 
-const SPREADSHEET_ID = "1tPSECufK0DIsQjdVYeVnCYMV04IbjxeaFRiVZtUSZWY";
-const LINE_ACCESS_TOKEN = "RWqEyZDr4UnUUpMpzWDG8N7+3nuilSVpC7kwfz/kplC8mU/cy1KNvJErhAOTWJoDQ7jtXx6JjqDyzlNhXppGNPb6WsZsg5M9hMZo7uELbWgu+Pm+vjbTQbc4HuycCD5tYh/aRypgZQcPwbGhtRHzzAdB04t89/1O/w1cDnyilFU=";
+const GEMINI_API_KEY = "GEMINI_API_KEY"; 
+const SPREADSHEET_ID = "SPREADSHEET_ID";
+const LINE_ACCESS_TOKEN = "LINE_ACCESS_TOKEN";
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
