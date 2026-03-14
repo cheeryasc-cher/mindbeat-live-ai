@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --p: #6c5ce7; --s: #0984e3; --bg: #f8faff; --soft: #636e72; }
+    body { background: var(--bg); font-family: 'Prompt', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .lang-box { position: absolute; top: 20px; left: 20px; display: flex; gap: 8px; }
+    .btn-l { font-size: 11px; cursor: pointer; padding: 6px 14px; border-radius: 20px; border: 1px solid #ddd; background: #fff; opacity: 0.5; transition: 0.3s; font-weight: 500; }
+    .btn-l.active { opacity: 1; border-color: var(--p); color: var(--p); background: #fff; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.1); }
+    .profile-info { width: 100%; max-width: 420px; text-align: right; margin-bottom: 12px; font-size: 13px; color: var(--soft); font-weight: 500; }
+    .card { background: #fff; border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.06); text-align: center; box-sizing: border-box; }
+    h2 { font-weight: 600; color: var(--p); margin: 0 0 10px 0; font-size: 26px; }
+    .sub-text { font-size: 14px; color: var(--soft); margin-bottom: 25px; line-height: 1.6; }
+    textarea { width: 100%; height: 120px; border-radius: 22px; border: 1px solid #edf2f7; padding: 20px; font-family: 'Prompt'; font-size: 15px; outline: none; box-sizing: border-box; background: #fcfdfe; }
+    #sendBtn { background: linear-gradient(135deg, var(--p), var(--s)); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 22px; margin-top: 20px; font-weight: 600; cursor: pointer; font-size: 16px; }
+    #result { margin-top: 25px; padding: 25px; background: #fff; border-radius: 25px; text-align: left; display: none; border-left: 6px solid var(--s); box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+    #guestArea { display: none; background: #fff; padding: 20px; border-radius: 25px; margin-top: 15px; border: 1px dashed var(--p); width: 100%; max-width: 420px; box-sizing: border-box; }
+    .dash-box { display: none; width: 100%; max-width: 420px; background: #fff; margin-top: 25px; border-radius: 35px; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 40px rgba(0,0,0,0.08); }
+    select { padding: 8px 15px; border-radius: 15px; border: 1px solid #edf2f7; font-family: 'Prompt'; color: var(--p); font-weight: 500; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <div class="lang-box">
+    <div id="lTH" class="btn-l active" onclick="setLang('TH')">ไทย</div>
+    <div id="lEN" class="btn-l" onclick="setLang('EN')">English</div>
+  </div>
+  <div class="profile-info" id="userName">⏳ กำลังเตรียมพื้นที่...</div>
+  <div class="card">
+    <h2 id="uiTitle">MindBeat Live 🎶</h2>
+    <p id="uiSub" class="sub-text">มีอะไรอยากเล่าให้ฟังไหม...</p>
+    <textarea id="userInput" placeholder="เล่าเรื่องราวที่เจอมา..."></textarea>
+    <button id="sendBtn" onclick="sendAI()">ส่งความรู้สึกให้กัน 💜</button>
+    <div id="result"></div>
+    <button id="saveBtn" style="display:none; width:100%; background:#10b981; color:#fff; border:none; padding:16px; border-radius:22px; margin-top:15px; cursor:pointer; font-weight:600;" onclick="saveToSheet()">บันทึกเรื่องราว ✅</button>
+  </div>
+  <div id="guestArea">
+    <p id="uiGuest" style="font-size:12px; margin-bottom:10px; font-weight:600; text-align:center;">🔑 ใส่รหัสสมาชิก (5 หลัก)</p>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <input type="text" id="mInput" placeholder="A1B2C" maxlength="5" style="width:100px; padding:10px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; text-transform:uppercase;">
+      <button onclick="mLoad()" style="padding:10px 20px; background:var(--p); color:#fff; border:none; border-radius:12px;">ตกลง</button>
+    </div>
+  </div>
+  <div id="uiDashToggle" style="margin-top:25px; color:var(--p); cursor:pointer; font-size:14px; font-weight:500; text-decoration:underline;" onclick="toggleD()">📊 ย้อนดูเส้นทางความรู้สึก</div>
+  <div id="dash" class="dash-box">
+    <div style="text-align:center;">
+      <select id="timeFilter" onchange="loadDashboardData(USER_ID || MEMBER_ID)">
+        <option value="7days" id="opt7Days">7 วันล่าสุด</option>
+        <option value="today" id="optToday">วันนี้</option>
+        <option value="all" id="optAll">ทั้งหมด</option>
+      </select>
+    </div>
+    <div id="topM" style="text-align:center; font-weight:600; color:var(--p); margin-bottom:15px; font-size:17px;">-</div>
+    <div style="height:180px;"><canvas id="moodChart"></canvas></div>
+    <div id="hList" style="margin-top:20px; max-height:150px; overflow-y:auto; border-top:1px solid #f1f5f9;"></div>
+  </div>
+
+  <script>
+    let USER_ID = ""; let MEMBER_ID = ""; let lastAI = ""; let allData = []; let lang = 'TH';
+    const ui = {
+      TH: { 
+        title: "MindBeat Live 🎶", 
+        sub: "มานี่มาเพื่อน... มีอะไรอยากเล่าให้เราฟังไหม?", 
+        placeholder: "เล่าเรื่องราวที่เธอเจอมาให้เราฟังหน่อยสิ", 
+        btn: "ส่งความรู้สึกให้กัน 💜", 
+        loading: "✨ เรากำลังตั้งใจฟังเธออยู่นะ...", 
+        guest: "🔑 ใส่รหัสสมาชิก (5 หลัก) เพื่อดูการเดินทางของใจ", 
+        save: "บันทึกเรื่องราวลงในไดอารี่เรานะ ✅", 
+        dashToggle: "📊 ย้อนดูเส้นทางความรู้สึกของเรา", 
+        top: "ช่วงนี้เธอรู้สึกแบบนี้บ่อยที่สุดเลย: ", 
+        optAll: "การเดินทางทั้งหมด", 
+        optToday: "ความรู้สึกวันนี้", 
+        opt7Days: "7 วันที่ผ่านมา" 
+      },
+      EN: { 
+        title: "MindBeat Live 🎶", 
+        sub: "Hey friend... anything on your mind?", 
+        placeholder: "tell me your story.", 
+        btn: "Share Your Heart 💜", 
+        loading: "✨ I'm listening to you...", 
+        guest: "🔑 Enter Member ID to see your journey", 
+        save: "Save to our diary ✅", 
+        dashToggle: "📊 Journey of Your Heart", 
+        top: "Your most frequent mood lately: ", 
+        optAll: "All Time", 
+        optToday: "Today", 
+        opt7Days: "Last 7 Days" 
+      }
+    };
+
+    function setLang(l) {
+      lang = l;
+      document.getElementById('lTH').classList.toggle('active', l === 'TH');
+      document.getElementById('lEN').classList.toggle('active', l === 'EN');
+      const t = ui[l];
+      document.getElementById('uiTitle').innerText = t.title; document.getElementById('uiSub').innerText = t.sub;
+      document.getElementById('userInput').placeholder = t.placeholder; document.getElementById('sendBtn').innerText = t.btn;
+      document.getElementById('uiGuest').innerText = t.guest; document.getElementById('saveBtn').innerText = t.save;
+      document.getElementById('uiDashToggle').innerText = t.dashToggle;
+      document.getElementById('optAll').innerText = t.optAll; document.getElementById('optToday').innerText = t.optToday; document.getElementById('opt7Days').innerText = t.opt7Days;
+      if(allData.length) updateUI();
+    }
+
+    async function startApp() {
+      setLang(lang); // 1. แสดงภาษาทันทีไม่ต้องรอ
+      try {
+        // 1. ตั้งเวลาจำกัด (Timeout) ถ้าโหลด LIFF นานเกิน 5 วินาที ให้ตัดเข้า forceG เลย
+        const timeout = setTimeout(() => {
+          console.warn("LIFF init timeout");
+          forceG();
+        }, 5000);
+        await liff.init({ liffId: "LIFF_ID" });
+        clearTimeout(timeout); // ถ้า init ทันเวลา ให้ยกเลิกการนับถอยหลัง
+
+        // 2. เช็คว่าอยู่ในแอป LINE หรือไม่?
+        if (liff.isInClient()) {
+          // ถ้าอยู่ใน LINE ให้จัดการเรื่อง Login
+          if (!liff.isLoggedIn()) {
+            liff.login(); 
+          } else {
+            const p = await liff.getProfile();
+            if (p && p.userId) {
+              USER_ID = p.userId;
+              loadDashboardData(USER_ID, "7days");
+              // ✅ อยู่ในไลน์ก็โชว์ช่องกรอกรหัสสมาชิกได้
+              document.getElementById('guestArea').style.display = "block";
+            } else { forceG(); }
+          }
+        } else {
+          // 3. ✅ ถ้าเปิดบนคอม (Browser ทั่วไป) ให้เข้า Guest ทันที 
+          // วิธีนี้จะแก้ปัญหา "refused to connect" ได้ 100%
+          forceG();
+        }
+      } catch (e) {
+        console.error("LIFF Error:", e);
+        forceG(); 
+      }
+    }
+
+    function forceG() { 
+      setLang(lang); 
+      document.getElementById('userName').innerText = lang === 'TH' ? "โหมดผู้เยี่ยมชม" : "Guest Mode"; 
+      // ✅ มั่นใจว่าช่องกรอกรหัสแสดงผลแน่นอน
+      document.getElementById('guestArea').style.display = "block"; 
+      loadDashboardData("Web-Guest", "7days");
+    }
+
+    function loadDashboardData(key, filter) {
+      const f = filter || document.getElementById('timeFilter').value;
+      document.getElementById('userName').innerText = (lang === 'TH' ? "⏳ กำลังเรียกข้อมูล..." : "⏳ Loading...");
+
+      google.script.run.withSuccessHandler(res => {
+        MEMBER_ID = res.memberId;
+        document.getElementById('userName').innerText = (lang==='TH'?'หมายเลขสมาชิก: ':'Member ID: ') + MEMBER_ID;
+        
+        // ✅ แสดงช่องกรอกรหัสเสมอ เพื่อให้ User เปลี่ยนรหัสเองได้หากต้องการ
+        document.getElementById('guestArea').style.display = "block";
+        
+        allData = res.history; 
+        updateUI(); 
+      }).getMoodHistory(key, f);
+    }
+
+    function mLoad() { loadDashboardData(document.getElementById('mInput').value.toUpperCase()); }
+
+    function sendAI() {
+      const m = document.getElementById('userInput').value; if(!m) return;
+      const resD = document.getElementById('result');
+      resD.style.display = "block";
+      resD.innerHTML = `<div style="text-align:center;">${ui[lang].loading}</div>`;
+      
+      google.script.run.withSuccessHandler(r => {
+        lastAI = r; const p = r.split('|');
+        // ✅ ปรับ Layout: Greeting (สีม่วง) -> เพลง (พื้นหลังฟ้า) -> ปลอบโยน
+        resD.innerHTML = `
+          <div style="font-weight:600; color:var(--p); margin-bottom:15px; font-size:16px;">${p[1]||''}</div>
+          <div style="white-space: pre-wrap; font-style: italic; color:#2d3436; margin-bottom:20px; background:#f0f7ff; padding:20px; border-radius:20px; line-height:1.7;">${p[2]||''}</div>
+          <div style="font-size:14px; color:#4a5568; line-height:1.6; padding:0 5px;">${p[3]||''}</div>
+        `;
+        document.getElementById('saveBtn').style.display = "block";
+      }).askGemini(m, null, lang);
+    }
+
+    function saveToSheet() {
+      const m = document.getElementById('userInput').value;
+      const mid = (MEMBER_ID !== "Guest") ? MEMBER_ID : document.getElementById('mInput').value.toUpperCase();
+      google.script.run.withSuccessHandler(() => { 
+        alert(lang==='TH'?"บันทึกแล้ว!":"Saved!"); 
+        document.getElementById('userInput').value = ""; document.getElementById('result').style.display = "none";
+        document.getElementById('saveBtn').style.display = "none";
+        loadDashboardData(USER_ID || mid); 
+      }).saveToAll(m, lastAI, lang, USER_ID, mid);
+    }
+
+    function toggleD() { const d = document.getElementById('dash'); d.style.display = d.style.display==='none'?'block':'none'; }
+
+    function updateUI() {
+      const counts = {}; const list = document.getElementById('hList'); list.innerHTML = "";
+      if(!allData.length) { document.getElementById('topM').innerText = "-"; list.innerHTML = "<p style='text-align:center; font-size:12px; color:gray; padding:10px;'>ไม่มีข้อมูล</p>"; return; }
+      allData.forEach(r => {
+        counts[r[2]] = (counts[r[2]]||0)+1;
+        list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #f8fafc; display:flex; justify-content:space-between; font-size:12px;">
+                              <span style="font-weight:500; color:var(--p);">${r[2]}</span>
+                              <span style="color:var(--soft);">${new Date(r[0]).toLocaleDateString()}</span>
+                           </div>`;
+      });
+      const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+      document.getElementById('topM').innerText = ui[lang].top + top;
+      renderC(counts);
+    }
+
+    function renderC(c) {
+      const ctx = document.getElementById('moodChart').getContext('2d');
+      if(window.myC) window.myC.destroy();
+      window.myC = new Chart(ctx, {
+        type: 'doughnut', data: { labels: Object.keys(c), datasets: [{ data: Object.values(c), backgroundColor: ['#6c5ce7','#0984e3','#a78bfa','#34d399','#fab005'], borderWidth: 0 }] },
+        options: { cutout: '70%', plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { family: 'Prompt', size: 10 } } } }, maintainAspectRatio: false }
+      });
+    }
+    document.addEventListener('DOMContentLoaded', startApp);
+  </script>
+</body>
+</html>
