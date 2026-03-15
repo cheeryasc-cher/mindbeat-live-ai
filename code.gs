@@ -111,7 +111,11 @@ function askGemini(message, dummy, lang) {
   const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY;
   
   const prompt = `You are an empathic "Best Friend" (เพื่อนที่รู้ใจ). Respond in ${lang === 'TH' ? 'Thai' : 'English'}. 
-  Do NOT use romantic words. Use friendly terms like "เธอ", "เรา", "เพื่อน", "you", "friend", "my friend".
+  Do NOT use romantic words. 
+  
+  ${lang === 'TH' 
+  ? 'Use friendly Thai pronouns like "เธอ", "เรา", "เพื่อน".' 
+  : 'Use friendly English terms like "you", "my friend", "buddy".'}
   
   Analyze: "${message}". 
   Provide response strictly in 4 parts separated by | as follows:
@@ -120,7 +124,7 @@ function askGemini(message, dummy, lang) {
   3. A 4-line emotional song lyric starting with 🎵 (use \n for line breaks between the 4 lines)
   4. Heartfelt Reflection starting with 🌱 (Limit to 180 characters, warm and friendly)
   
-  Strictly use | as separator. No bold text. No markdown.`;
+  Strictly use | as separator. No bold text. No markdown. No Thai words in English responses.`;
 
   try {
     const res = UrlFetchApp.fetch(url, { 
