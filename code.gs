@@ -53,20 +53,25 @@ function doPost(e) {
       }
 
       // ✅ ถ้าไม่ใช่การถามรหัส -> ส่งให้ Gemini AI วิเคราะห์ตามปกติ
-      let aiRaw = askGemini(userMessage, null, "TH");
-      
-      // ✨ เพิ่มบรรทัดนี้: ล้าง Tag <br> ออกให้หมด และเปลี่ยนเป็น \n (ขึ้นบรรทัดใหม่ที่ LINE อ่านออก)
-      aiRaw = aiRaw.replace(/<br\s*\/?>/gi, '\n');
+      // ✅ ตรวจสอบภาษา: ถ้าไม่มีภาษาไทยเลย ให้ปรับเป็นภาษาอังกฤษ (EN)
+      const isThai = /[ก-๙]/.test(userMessage);
+      const lang = isThai ? "TH" : "EN";
 
+      // ✅ ส่งค่า lang ที่เช็คได้เข้าไปใน askGemini
+      let aiRaw = askGemini(userMessage, null, lang); 
+
+      // ✨ ล้าง Tag <br> และจัดการข้อความ
+      aiRaw = aiRaw.replace(/<br\s*\/?>/gi, '\n');
       const p = aiRaw.split('|');
+
       const memberData = getMoodHistory(userId, "all");
-      
-      saveToAll(userMessage, aiRaw, "TH", userId, memberData.memberId);
-      
-      replyText = `${p[1] || '✨ ไงเธอ'}\n\n${p[2] || ''}\n\n${p[3] || ''}`;
+      saveToAll(userMessage, aiRaw, lang, userId, memberData.memberId);
+
+      // แสดงผลตามลำดับ (Mood อยู่ index 0, Greeting 1, Song 2, Reflection 3)
+      replyText = `${p[1] || '✨'}\n\n${p[2] || ''}\n\n${p[3] || ''}`;
       sendLineReply(replyToken, replyText);
 
-    } 
+    }
 
     // 2. จัดการประเภทอื่นๆ (สติ๊กเกอร์/รูปภาพ)
     else {
